@@ -1,6 +1,8 @@
 import random
+import numpy as np
 # Workforce, Workforce_Storehouses, People_Storehouses, Tels_To_Plant
-type Input = tuple[int, int, int, int]
+type InputVec = tuple[int, int, int, int]
+type StateVec = tuple[float, float, float, float, float, float]
 
 class State:
     def __init__(self):
@@ -22,6 +24,11 @@ class State:
         print("Levels:", self.levels)
         print("Finished:", self.finished)
         print("==============")
+
+    def to_vector(self) -> StateVec:
+        return (float(self.people), float(self.tels_flooded), float(self.storage), float(self.years), float(self.errors), float(self.levels))
+    def vector(self):
+        return np.array(self.to_vector())
 
 def jubileeStatus(state: State) -> State:
     if state.levels < 7 and state.errors > 3 and state.people < 300000 and state.storage * 1000 < state.people + 50:
@@ -83,9 +90,9 @@ def rebellionStatus(state: State, workers_fed: int, workforce: int) -> tuple[Sta
 
 def randomEventStatus(state: State, workforce: int, workers_fed: int) -> tuple[State, int, int]:
     chance = random.randint(1, 300)
-    dead = 0
-    amount = 0
-    escapees = 0
+    dead: int = 0
+    amount: int = 0
+    escapees: int = 0
     if chance < 19:
         dead = int(state.people * random.random())
         state.people -= dead
@@ -106,7 +113,7 @@ def randomEventStatus(state: State, workforce: int, workers_fed: int) -> tuple[S
 
 def randomEventStatus2(state: State) -> State:
     chance = random.randint(1, 30)
-    amount = 0
+    amount: int = 0
     if chance > 22:
         amount = random.randint(1, 50)
         state.storage += amount
@@ -114,7 +121,7 @@ def randomEventStatus2(state: State) -> State:
         amount = random.randint(1, 50)
         state.tels_flooded += amount
     elif chance < 8:
-        amount = state.people * random.random()
+        amount = int(state.people * random.random())
         state.people -= amount
     return state
 
@@ -141,10 +148,10 @@ def harvestStatus(state: State, tels_to_plant: int) -> State:
     return state
 
 def feedStatus(state:State, workers_fed: int, workforce: int, people_fed: int) -> tuple[State, int, int]:
-    starved_people = 0
+    starved_people: int = 0
     if workers_fed > workforce:
         workers_fed = workforce
-    new_people = people_fed - state.people
+    new_people: int = people_fed - state.people
     if new_people < 0:
         new_people = 0
     new_people += random.randint(1, 1000)
@@ -206,14 +213,14 @@ def clearScreen():
     return
 
 
-def get_input() -> Input:
+def get_input() -> InputVec:
     workforce = int(input("Workforce: "))
     work_store = int(input("Workforce storehouses: "))
     people_store = int(input("People storehouses: "))
     tels_planted = int(input("Tels to plant: "))
     return workforce, work_store, people_store, tels_planted
 
-def game_core(state: State, input: Input) -> State:
+def game_core(state: State, input: InputVec) -> State:
     if not (state.years < 12 and state.levels < 20):
         state.finished = True
         return state
